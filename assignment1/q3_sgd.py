@@ -83,10 +83,9 @@ def sgd(f, x0, step, iterations, postprocessing=None, useSaved=False,
         # Don't forget to apply the postprocessing after every iteration!
         # You might want to print the progress every few iterations.
 
-        cost = None
-        ### YOUR CODE HERE
-        raise NotImplementedError
-        ### END YOUR CODE
+        cost, grad = f(x)
+        x -= grad * step
+        if postprocessing:postprocessing(x)
 
         if iter % PRINT_EVERY == 0:
             if not expcost:
@@ -131,7 +130,7 @@ def your_sanity_checks():
     your additional tests be graded.
     """
     print "Running your sanity checks..."
-    ### YOUR CODE HERE
+    return
     raise NotImplementedError
     ### END YOUR CODE
 
