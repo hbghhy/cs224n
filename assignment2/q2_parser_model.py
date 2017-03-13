@@ -18,14 +18,15 @@ class Config(object):
     """
     n_features = 36
     n_classes = 3
-    dropout = 0.5
+    dropout = 0.7
     embed_size = 50
     #hidden_size = 200
-    hidden_size = 220
-    batch_size = 1024
+    hidden_size = 180
+    batch_size = 1800
     n_epochs = 10
-    lr = 0.0007
-    l2reg = 1e-8
+    lr = 0.0012
+    l2reg = 1e-12
+    hidden_size1 = 90
 
 
 class ParserModel(Model):
@@ -140,12 +141,16 @@ class ParserModel(Model):
 
         x = self.add_embedding()
         self.W = xavier_weight_init()((self.config.n_features * self.config.embed_size, self.config.hidden_size))
-        self.U = xavier_weight_init()((self.config.hidden_size, self.config.n_classes))
+        self.W1 = xavier_weight_init()((self.config.hidden_size, self.config.hidden_size1))
+        b11 = tf.Variable(tf.zeros((self.config.hidden_size1,)))
+        self.U = xavier_weight_init()((self.config.hidden_size1, self.config.n_classes))
         b1 = tf.Variable(tf.zeros((self.config.hidden_size,)))
         b2 = tf.Variable(tf.zeros((self.config.n_classes)))
         h = tf.nn.relu(tf.matmul(x, self.W) + b1)
         h_drop = tf.nn.dropout(h, self.dropout_placeholder)
-        pred = tf.matmul(h_drop, self.U) + b2
+        h1=tf.nn.relu(tf.matmul(h_drop, self.W1) + b11)
+        h_drop1=tf.nn.dropout(h1, self.dropout_placeholder)
+        pred = tf.matmul(h_drop1, self.U) + b2
 
         return pred
 
@@ -162,7 +167,8 @@ class ParserModel(Model):
         Returns:
             loss: A 0-d tensor (scalar)
         """
-        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=self.labels_placeholder))+self.config.l2reg*(tf.reduce_mean(tf.square(self.W))+tf.reduce_mean(tf.square(self.U)))
+        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=self.labels_placeholder))+self.config.l2reg*(tf.reduce_mean(tf.square(self.W))+tf.reduce_mean(tf.square(self.U))+
+            tf.reduce_mean(tf.square(self.W1)))
         return loss
 
     def add_training_op(self, loss):
